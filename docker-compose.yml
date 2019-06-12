@@ -1,0 +1,43 @@
+version: '3'
+
+services:
+    spark:
+        build: .
+        container_name: spark
+        expose:
+            - 4040
+        ports:
+            - 4040:4040
+        environment:
+            SPARK_PUBLIC_DNS: spark
+        networks:
+            - lambda-network
+
+    elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.1.1
+        container_name: elasticsearch
+        ports:
+          - "9200:9200"
+        environment:
+            - "cluster.initial_master_nodes=elasticsearch"
+            - "node.name=elasticsearch"
+            - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+        networks:
+            - lambda-network
+
+    kibana:
+        image: docker.elastic.co/kibana/kibana:7.1.1
+        container_name: kibana
+        environment:
+            - "elasticsearch.url=http://elasticsearch:9200 "
+            - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+        networks:
+            - lambda-network
+        depends_on:
+            - elasticsearch
+        ports:
+          - "5601:5601"
+
+networks:
+    lambda-network:
+        driver: bridge
